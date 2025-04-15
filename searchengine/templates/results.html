@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Results</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+</head>
+<style>
+	body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            margin-top: 60px; 
+            padding: 20px;
+            background-color: #fff;
+            color: #333;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+	header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px;
+        background-color: #fff;
+        border-bottom: 1px solid #dfe1e5;
+        z-index: 1000;
+    }
+	 .header-hidden {
+        display: none;
+    }
+    .logo-container {
+        display: flex;
+        justify-content: flex-start;
+        padding: 10px;
+    }
+
+    .company-logo {
+        max-width: 150px;
+        height: auto;
+    }
+
+    .header-options {
+        display: flex;
+        align-items: center;
+        margin-left: auto; /* Move to the right side */
+    }
+
+    .header-options a {
+        margin-right: 20px;
+        text-decoration: none;
+        color: #333;
+        font-size: 18px;
+        transition: color 0.3s;
+    }
+
+    .header-options a:hover {
+        color: #4285f4;
+    }
+
+    .header-options i {
+        margin-right: 5px; /* Adjust as needed for spacing between icon and text */
+    }
+
+        .result {
+            flex: 1;
+            max-width: calc(65% - 20px);
+            margin-bottom: 20px;
+            background-color: #fff;
+            border: 1px solid #dfe1e5;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: box-shadow 0.3s ease-in-out;
+        }
+
+        .result:hover {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .results-info{
+            margin: 20px;
+        }
+
+        h1 {
+            font-size: 24px;
+            margin: 20px;
+            color: #4285f4;
+         
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 20px;
+        }
+
+        li {
+            border-bottom: 1px solid #ddd;
+            padding: 20px;
+            
+        }
+
+        strong {
+            font-weight: bold;
+            color: #333;
+            display: block;
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+
+        a {
+            text-decoration: none;
+            color: #1a0dab;
+            font-weight: bold;
+            display: block;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        p {
+            margin: 10px 0;
+            color: #555;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 3;
+        }
+
+        p.score {
+            font-weight: bold;
+            color: #0f9d58;
+            margin-bottom: 5px;
+        }
+
+        .additional-info {
+            flex: 1;
+            max-width: calc(30% - 20px);
+            margin-left: 20px;
+            padding: 20px;
+            background-color: #fff;
+            border: 1px solid #dfe1e5;
+            border-radius: 8px;
+            height: fit-content;
+        }
+
+        .additional-info h2 {
+            font-size: 24px;
+            color: #4285f4;
+            margin-bottom: 10px;
+        }
+
+        .additional-info p {
+            color: #555;
+            margin-bottom: 15px;
+        }
+
+        .additional-info a {
+            color: #1a0dab;
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        .additional-info ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .additional-info li {
+            margin-bottom: 5px;
+        }
+
+        .additional-info strong {
+            font-weight: bold;
+            color: #333;
+            margin-right: 5px;
+        }
+
+        #search-bar {
+            flex: 1;
+            max-width: calc(65% - 20px);
+            margin: 20px;
+        }
+
+        #search-form {
+            display: flex;
+            align-items: center;
+        }
+
+        #query {
+            flex: 1;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            outline: none;
+        }
+
+        #search-btn {
+        padding: 10px 20px;
+        font-size: 16px;
+        background-color: #4285f4;
+        color: white;
+        border: none;
+        cursor: pointer;
+        border-radius: 4px;
+        margin-left: 10px;
+    }
+        
+
+        #load-more-btn {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4285f4;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin-top: 20px;
+            border-radius: 4px;
+        }
+
+        #load-more-btn:hover {
+            background-color: #357ae8;
+        }
+
+        /* Footer styles */
+        footer {
+            width: 100%;
+            text-align: center;
+            padding: 10px;
+            background-color: #fff;
+            border-top: 1px solid #dfe1e5;
+            margin-top: 20px;
+        }
+
+        @media screen and (max-width: 768px) {
+            .result {
+                flex: 1 100%;
+                max-width: calc(100%);
+                margin-right: 0;
+            }
+
+            .additional-info {
+                flex: 1 100%;
+                max-width: calc(100% - 20px);
+                margin-left: 0;
+                margin-top: 20px;
+            }
+
+            #search-bar {
+                flex: 1 100%;
+                max-width: calc(100% - 60px);
+                margin: 20px 10px;
+            }
+
+            #search-btn {
+                width: 80px;
+            }
+
+            body {
+                padding: 10px;
+            }
+
+            .result:hover {
+                box-shadow: none;
+            }
+        }
+
+        p.results-info {
+            font-size: 16px;
+            color: #555;
+            margin-bottom: 10px;
+        }
+
+        /* Additional styles for displaying time taken */
+        p.results-info span {
+            font-weight: bold;
+            color: #4285f4;
+        }
+         #catagory-options {
+        margin-bottom: 20px;
+    }
+
+    #catagory-options {
+        float: right; /* Align to the right side */
+        margin-top: -50px; /* Adjust as needed for spacing */
+        margin-right: 10px;
+    }
+
+    .catagory-btn {
+        padding: 8px 16px;
+        font-size: 14px;
+        cursor: pointer;
+        background-color: #f0f0f0;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        transition: background-color 0.3s;
+    }
+
+    .catagory-btn.active {
+        background-color: #4285f4;
+        color: #fff;
+        border-color: #4285f4;
+    }
+
+    .catagory-btn:not(:last-child) {
+        margin-right: 10px;
+    }
+
+    .catagory-btn:hover {
+        background-color: #ddd;
+
+</style>
+<body>
+     <div>
+     <header>
+        <div class="logo-container">
+            <img src="algolizen.png" alt="Company Logo" class="company-logo">
+        </div>
+        <div class="header-options">
+        <a href="/settings" title="Settings"><i class="fas fa-cog"></i></a>
+        <a href="/user-account" title="User Account"><i class="fas fa-user"></i></a>
+        <a href="/tools" title="Tools"><i class="fas fa-wrench"></i></a>
+    </header>
+    </div>
+    
+    <!-- Search results -->
+    <div class="result">
+        <h1 class="search-results-title">Search Results for "{{ query }}"</h1>
+        <div id="catagory-options">
+        <button class="catagory-btn active" data-catagory="all">All</button>
+        <button class="catagory-btn" data-catagory="image">Image</button>
+        <button class="catagory-btn" data-catagory="news">News</button>
+        <!-- Add more catagory options as needed -->
+    </div>
+        <p class="results-info">{{ num_results }} results found in <span>{{ time_taken.total_seconds() }}</span> seconds</p>
+        
+        <div id="search-bar">
+            <form id="search-form" action="/search" method="post">
+                <input type="text" name="query" id="query" placeholder="Search again" required>
+                <button type="submit" id="search-btn">Search</button>
+            </form>
+        </div>
+        
+        <ul>
+            {% for document in ranked_documents %}
+                <li>
+                    <strong>{{ document.rank }}. {{ document.title }}</strong> 
+                    <a href="{{ document.url }}" target="_blank">{{ document.url }}</a>
+                    <p class="score">Score: {{ document.score }}</p>
+                    <p>{{ document.content }}</p>
+                </li>
+            {% endfor %}
+        </ul>
+
+        <!-- "Load More" button -->
+        <button id="load-more-btn" data-page="{{ page_number + 1 }}" data-query="{{ query }}">Load More</button>
+    </div>
+
+    <!-- Additional information -->
+    <div class="additional-info">
+        <h2>{{ topic_info.title }}</h2>
+        <p>{{ topic_info.summary }}</p>
+        <a href="{{ topic_info.fullurl }}" target="_blank">Read more on Wikipedia</a>
+        {% if topic_info.pageprops %}
+            <ul>
+                {% for prop_key, prop_value in topic_info.pageprops.items() %}
+                    <li><strong>{{ prop_key }}:</strong> {{ prop_value }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        &copy; 2024 Algolizen. All rights reserved.
+    </footer>
+
+<!-- JavaScript for loading more results -->
+<script>
+    const loadMoreBtn = document.getElementById('load-more-btn');
+    const resultsContainer = document.querySelector('ul');
+
+    loadMoreBtn.addEventListener('click', function () {
+        const nextPage = this.getAttribute('data-page');
+        const query = this.getAttribute('data-query');
+        loadMoreResults(query, nextPage);
+    });
+
+    async function loadMoreResults(query, page) {
+        try {
+            loadMoreBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...'; // Show loading spinner
+
+            const response = await fetch(`/load_more?query=${encodeURIComponent(query)}&page=${page}`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            data.results.forEach(function (result) {
+                const li = document.createElement('li');
+                li.innerHTML = '<strong>' + result.rank + '. ' + result.title + '</strong>' +
+                    '<a href="' + result.url + '" target="_blank">' + result.url + '</a>' +
+                    '<p class="score">Score: ' + result.score + '</p>' +
+                    '<p>' + result.content + '</p>';
+                resultsContainer.appendChild(li);
+            });
+
+            if (data.results.length === 0) {
+                loadMoreBtn.style.display = 'none'; // Hide the button if there are no more results
+            } else {
+                loadMoreBtn.setAttribute('data-page', data.next_page);
+                loadMoreBtn.innerHTML = 'Load More'; // Restore button text
+            }
+        } catch (error) {
+            console.error('Error fetching more results:', error);
+            loadMoreBtn.innerHTML = 'Load More'; // Restore button text on error
+        }
+    }
+</script>
+
+
+    <script>
+	    document.addEventListener("DOMContentLoaded", function () {
+		truncateTitle();
+	    });
+
+	    function truncateTitle() {
+		var titleElement = document.querySelector('.search-results-title');
+		if (titleElement) {
+		    var originalText = titleElement.textContent.trim();
+		    var maxWords = 5; // Adjust this value as needed
+
+		    // Split the original text into an array of words
+		    var words = originalText.split(' ');
+
+		    // Truncate the array to the desired number of words
+		    var truncatedWords = words.slice(0, maxWords);
+
+		    // Join the truncated words back into a string
+		    var truncatedText = truncatedWords.join(' ');
+
+		    // Update the title with the truncated text
+		    titleElement.textContent = truncatedText + '...';
+		}
+	    }
+</script>
+<script>
+        var lastScrollTop = 0;
+        var header = document.querySelector('header');
+
+        window.addEventListener('scroll', function () {
+            var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+            if (scrollTop > lastScrollTop) {
+                // Scrolling down, hide the header
+                header.classList.add('header-hidden');
+            } else {
+                // Scrolling up, show the header
+                header.classList.remove('header-hidden');
+            }
+
+            lastScrollTop = scrollTop;
+        });
+    </script>
+</body>
+</html>

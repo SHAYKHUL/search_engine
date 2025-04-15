@@ -1,0 +1,201 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Search Engine</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column; 
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background: linear-gradient(to right, #36D1DC, #5B86E5);
+            color: #fff;
+        }
+
+        .logo-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .company-logo {
+            max-width: 200px; 
+            height: auto;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            overflow: hidden;
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: box-shadow 0.3s ease-in-out;
+            max-width: 600px;
+            margin-bottom: 20px;
+        }
+
+        .search-container {
+            display: flex;
+            align-items: stretch;
+        }
+
+        input {
+            flex: 1;
+            width: 400px;
+            padding: 12px;
+            font-size: 16px;
+            border: none;
+            outline: none;
+        }
+
+        input:focus {
+            box-shadow: 0 0 8px rgba(255, 255, 255, 0.7);
+        }
+
+        #suggestions {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            color: black;
+            background-color: #fff;
+            border-top: 1px solid #ccc;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        #suggestions li {
+            padding: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s ease-in-out;
+        }
+
+        #suggestions li:hover {
+            background-color: #f0f0f0;
+        }
+
+        button {
+            padding: 12px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .trending-searches {
+            text-align: center;
+            font-size: 18px;
+        }
+
+        .trending-searches ul {
+            list-style: none;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            margin: 0;
+        }
+
+        .trending-searches li {
+            margin: 0 10px;
+            cursor: pointer;
+            transition: color 0.3s ease-in-out;
+        }
+
+        .trending-searches li:hover {
+            color: #ffd700;
+        }
+
+        /* Media query for screens with a maximum width of 600px (typical mobile screens) */
+        @media only screen and (max-width: 600px) {
+            form {
+                margin-top: 0px;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                z-index: 1000;
+                border-radius: 0;
+            }
+
+            input {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="logo-container">
+        <img src="algolizen.png" alt="Company Logo" class="company-logo">
+    </div>
+
+    <!-- Your existing form and script content -->
+    <form action="/search" method="post">
+        <div class="search-container">
+            <input type="text" name="query" id="query" placeholder="Search..." required autocomplete="off" oninput="getSuggestions()">
+            <button type="submit">Search</button>
+        </div>
+        <ul id="suggestions"></ul>
+    </form>
+
+    <div class="trending-searches">
+        <p>Explore Trending Searches:</p>
+        <ul>
+            <li onclick="searchTrending('Technology')">Technology</li>
+            <li onclick="searchTrending('Web Development')">Web Development</li>
+            <li onclick="searchTrending('Data Science')">Data Science</li>
+            <li onclick="searchTrending('Artificial Intelligence')">Artificial Intelligence</li>
+            <!-- Add more trending searches as needed -->
+        </ul>
+    </div>
+
+    <script>
+        function getSuggestions() {
+            const suggestions = ['website', 'landing page', 'business', 'python', 'opensseas', 'javascript', 'programming', 'design', 'cloud computing', 'startups'];
+            const query = document.getElementById('query').value.toLowerCase();
+            const suggestionsList = document.getElementById('suggestions');
+
+            suggestionsList.innerHTML = '';
+
+            suggestions.forEach(suggestion => {
+                if (suggestion.toLowerCase().includes(query)) {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = suggestion;
+                    listItem.onclick = () => {
+                        document.getElementById('query').value = suggestion;
+                        suggestionsList.innerHTML = '';
+                    };
+                    suggestionsList.appendChild(listItem);
+                }
+            });
+        }
+
+        function searchTrending(query) {
+            document.getElementById('query').value = query;
+            document.querySelector('form').submit();
+        }
+
+        document.addEventListener('click', function(event) {
+            const suggestionsList = document.getElementById('suggestions');
+            const queryInput = document.getElementById('query');
+
+            if (event.target !== queryInput && event.target !== suggestionsList) {
+                suggestionsList.innerHTML = '';
+            }
+        });
+    </script>
+</body>
+</html>
