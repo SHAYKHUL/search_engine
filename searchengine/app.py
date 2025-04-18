@@ -61,18 +61,21 @@ def search():
         if not query:
             return render_template('index.html')
 
-        # Check cache for topic info
+        # --- Track co-occurring queries ---
+        words = query.lower().split()
+        for word in set(words):
+            redis_client.sadd(f"related:{word}", query)
+
+        # --- Get topic info from cache or Wikipedia ---
         topic_info = get_from_cache(f"topic_info:{query}")
         if not topic_info:
-            # If not in cache, fetch it from Wikipedia
             topic_info = asyncio.run(async_get_topic_information(query))
             set_to_cache(f"topic_info:{query}", topic_info)
 
-        # Check cache for ranking results
+        # --- Get search results from cache or compute them ---
         ranking_cache_key = f"ranking_results:{query}:{page_number}"
         results = get_from_cache(ranking_cache_key)
         if not results:
-            # If not in cache, rank the documents
             results = advanced_ranker.rank_documents(query)
             results = [(doc_id, score) for doc_id, score in results if score > 5.0]
             set_to_cache(ranking_cache_key, results)
@@ -120,6 +123,21 @@ def search():
         logging.error(f"Error in search: {str(e)}")
         logging.error(traceback.format_exc())
         return render_template('error.html', error_message="Something went wrong while processing your request.")
+
+@app.route('/related')
+def related_queries():
+    query = request.args.get('query')
+    if not query:
+        return jsonify({'error': 'Missing query'}), 400
+
+    # Collect related queries from Redis
+    related_set = set()
+    for word in set(query.lower().split()):
+        related_set.update(redis_client.smembers(f"related:{word}"))
+
+    related_set.discard(query)
+    return jsonify(list(related_set))
+
 
 
 @app.route('/load_more')
