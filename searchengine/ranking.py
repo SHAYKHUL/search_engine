@@ -71,6 +71,10 @@ class AdvancedRanking:
 
     def rank_documents(self, query: str, fields: List[str] = None, boost_terms: Dict[str, float] = None) -> List[Tuple[int, float]]:
         query_terms = self.expand_query(query)
+
+        if boost_terms:
+            query_terms = self.apply_boosting(query_terms, boost_terms)
+
         scores = []
 
         with ThreadPoolExecutor() as executor:
@@ -82,8 +86,15 @@ class AdvancedRanking:
                 bm25_score = future.result()
                 scores.append((doc_id, bm25_score))
 
-        sorted_results = sorted(scores, key=lambda x: x[1], reverse=True)
+        combined_scores = []
+        for doc_id, bm25_score in scores:
+            pagerank_score = self.page_rank_scores.get(doc_id, 0.0)
+            final_score = self.combine_scores(bm25_score, pagerank_score)
+            combined_scores.append((doc_id, final_score))
+
+        sorted_results = sorted(combined_scores, key=lambda x: x[1], reverse=True)
         return sorted_results
+
 
     def combine_scores(self, content_score: float, pagerank_score: float) -> float:
         combined_score = (self.content_weight * content_score) + (self.pagerank_weight * pagerank_score)
@@ -199,3 +210,40 @@ if __name__ == "__main__":
         print(f"URL: {document_tuple[1]}, Title: {document_tuple[2]}")
         print(f"Content: {document_tuple[3]}")
         print("----")
+
+def get_user_input():
+    # Get search query from user
+    query = input("Enter your search query: ")
+
+    # Get boosting terms from user (optional)
+    boost_terms_input = input("Enter terms to boost (comma-separated, format: term:boost_value): ")
+    boost_terms = {}
+    
+    if boost_terms_input:
+        for item in boost_terms_input.split(","):
+            term, boost_value = item.split(":")
+            boost_terms[term.strip()] = float(boost_value.strip())
+    
+    return query, boost_terms
+
+def display_results(results, indexer):
+    print("\nRanked Results:")
+    for rank, (doc_id, score) in enumerate(results, start=1):
+        document_tuple = indexer.get_document_by_id(doc_id)
+        print(f"Rank {rank}: Document ID {doc_id}, Score: {score:.4f}")
+        print(f"URL: {document_tuple[1]}, Title: {document_tuple[2]}")
+        print(f"Content: {document_tuple[3]}")
+        print("----")
+
+if __name__ == "__main__":
+    indexer = Indexing()
+    advanced_ranker = AdvancedRanking(indexer)
+
+    # Get user input
+    query, boost_terms = get_user_input()
+
+    # Rank documents based on the user query
+    results = advanced_ranker.rank_documents(query, boost_terms=boost_terms)
+
+    # Display the ranked results
+    display_results(results, indexer)
