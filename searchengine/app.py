@@ -19,6 +19,7 @@ import asyncio
 import aiohttp
 import hashlib
 import json
+from fuzzywuzzy import process  # Add fuzzy matching library
 
 # Download NLTK data
 nltk.download('punkt')
@@ -51,11 +52,12 @@ def index():
 
 
 @app.route('/search', methods=['POST'])
-def search():
+async def search():
     try:
         start_time = datetime.now()
 
         query = request.form['query'].strip()
+        query = query.strip().capitalize()  # Capitalize the query to match Wikipedia titles
         page_number = int(request.args.get('page', 1))
 
         if not query:
@@ -69,14 +71,19 @@ def search():
         # --- Get topic info from cache or Wikipedia ---
         topic_info = get_from_cache(f"topic_info:{query}")
         if not topic_info:
-            topic_info = asyncio.run(async_get_topic_information(query))
+            logging.info(f"No cache found for topic_info:{query}. Fetching from Wikipedia API.")
+            topic_info = await async_get_topic_information(query)
             set_to_cache(f"topic_info:{query}", topic_info)
+        else:
+            logging.info(f"Cache hit for topic_info:{query}: {topic_info}")
+
+        logging.info(f"Topic info for query '{query}': {topic_info}")
 
         # --- Get search results from cache or compute them ---
         ranking_cache_key = f"ranking_results:{query}:{page_number}"
         results = get_from_cache(ranking_cache_key)
         if not results:
-            results = advanced_ranker.rank_documents(query)
+            results = await async_rank_documents(query)
             results = [(doc_id, score) for doc_id, score in results if score > 5.0]
             set_to_cache(ranking_cache_key, results)
 
@@ -124,6 +131,7 @@ def search():
         logging.error(traceback.format_exc())
         return render_template('error.html', error_message="Something went wrong while processing your request.")
 
+
 @app.route('/related')
 def related_queries():
     query = request.args.get('query')
@@ -132,11 +140,22 @@ def related_queries():
 
     # Collect related queries from Redis
     related_set = set()
-    for word in set(query.lower().split()):
-        related_set.update(redis_client.smembers(f"related:{word}"))
+    try:
+        for word in set(query.lower().split()):
+            related_set.update(redis_client.smembers(f"related:{word}"))
 
-    related_set.discard(query)
-    return jsonify(list(related_set))
+        related_set.discard(query)  # Don't include the original query in related results
+
+        # Log the related queries to verify
+        logging.info(f"Related queries for '{query}': {related_set}")
+
+        if not related_set:
+            return jsonify({'message': 'No related queries found'}), 404
+        return jsonify(list(related_set))
+    
+    except Exception as e:
+        logging.error(f"Error fetching related queries: {str(e)}")
+        return jsonify({'error': 'Error processing related queries'}), 500
 
 
 
@@ -180,10 +199,46 @@ async def load_more():
         return jsonify({'error': 'Failed to load more results.'})
 
 
+@app.route('/suggest', methods=['GET'])
+def suggest():
+    try:
+        partial_query = request.args.get('query', '').strip().lower()
+        if not partial_query:
+            return jsonify({'suggestions': []})
+
+        # Fetch related queries from Redis
+        suggestions = set()
+        for word in partial_query.split():
+            related_queries = redis_client.smembers(f"related:{word}")
+            suggestions.update(related_queries)
+
+        # Fuzzy match suggestions
+        fuzzy_suggestions = process.extract(partial_query, suggestions, limit=20)
+
+        # Rank suggestions by relevance (frequency or similarity score)
+        ranked_suggestions = sorted(
+            fuzzy_suggestions,
+            key=lambda x: x[1],  # Sort by similarity score
+            reverse=True
+        )
+
+        # Filter suggestions that start with the partial query or are semantically similar
+        filtered_suggestions = [
+            suggestion[0] for suggestion in ranked_suggestions
+            if suggestion[1] > 50  # Only include suggestions with a similarity score > 50
+        ]
+
+        return jsonify({'suggestions': filtered_suggestions[:10]})  # Limit to 10 suggestions
+
+    except Exception as e:
+        logging.error(f"Error in suggest: {str(e)}")
+        return jsonify({'error': 'Failed to fetch suggestions'}), 500
+
+
 # --- Redis Caching Functions ---
 def get_from_cache(cache_key):
     cached_data = redis_client.get(cache_key)
-    if cached_data:
+    if (cached_data):
         return json.loads(cached_data)
     return None
 
@@ -200,8 +255,8 @@ async def async_get_topic_information(query):
             'format': 'json',
             'titles': query,
             'prop': 'extracts|info|pageprops',
-            'exintro': True,
-            'explaintext': True,
+            'exintro': 'true',  # Convert to string
+            'explaintext': 'true',  # Convert to string
             'inprop': 'url'
         }
         headers = {'User-Agent': USER_AGENT}
@@ -209,6 +264,8 @@ async def async_get_topic_information(query):
         async with aiohttp.ClientSession() as session:
             async with session.get(WIKIPEDIA_API_URL, params=params, headers=headers) as response:
                 data = await response.json()
+                logging.info(f"Wikipedia API response for query '{query}': {data}")  # Log the response
+
                 page = next(iter(data['query']['pages'].values()), None)
 
                 if page and 'extract' in page:
@@ -240,7 +297,7 @@ def generate_snippet(content, query, max_sentences=3, max_length=300):
     scored_sentences = []
     for i, sentence in enumerate(sentences):
         similarity_score = similarities[i]
-        if similarity_score > 0:
+        if (similarity_score > 0):
             match_count = sum(1 for term in query_terms if term in sentence.lower())
             final_score = similarity_score + (match_count / len(query_terms))
             scored_sentences.append((final_score, sentence.strip()))
