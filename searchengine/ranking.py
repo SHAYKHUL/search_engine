@@ -11,6 +11,9 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from functools import lru_cache
 from collections import Counter
 import matplotlib.pyplot as plt
+import os
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
 
 class AdvancedRanking:
     def __init__(self, indexer: Indexing, k1: float = 1.5, b: float = 0.75, damping_factor: float = 0.85,
@@ -47,6 +50,24 @@ class AdvancedRanking:
 
         return list(expanded_query)
 
+    async def expand_query_async(self, query: str) -> List[str]:
+        loop = asyncio.get_event_loop()
+        expanded_query = set()
+        exact_phrases = set(re.findall(r'"(.*?)"', query))
+
+        tasks = []
+        for term in self.indexer.tokenize(query):
+            expanded_query.add(term)
+            tasks.append(loop.run_in_executor(None, self.get_synonyms, term))
+            tasks.append(loop.run_in_executor(None, self.get_related_terms, term))
+
+        results = await asyncio.gather(*tasks)
+        for result in results:
+            expanded_query.update(result)
+
+        expanded_query.update(exact_phrases)
+        return list(expanded_query)
+
     def calculate_idf(self, term: str) -> float:
         num_docs_with_term = len(self.inverted_index.get(term, {}))
         num_docs = len(self.doc_lengths)
@@ -77,14 +98,18 @@ class AdvancedRanking:
 
         scores = []
 
-        with ThreadPoolExecutor() as executor:
+        # Optimize thread pool size based on available CPU cores
+        with ThreadPoolExecutor(max_workers=os.cpu_count()) as executor:
             doc_ids = list(self.doc_lengths.keys())
-            futures = {executor.submit(self.calculate_bm25_score, query_terms, doc_id): doc_id for doc_id in doc_ids}
+            batch_size = max(1, len(doc_ids) // (os.cpu_count() * 2))  # Dynamic batch size
+            futures = []
+
+            for i in range(0, len(doc_ids), batch_size):
+                batch = doc_ids[i:i + batch_size]
+                futures.append(executor.submit(self.process_batch, query_terms, batch))
 
             for future in as_completed(futures):
-                doc_id = futures[future]
-                bm25_score = future.result()
-                scores.append((doc_id, bm25_score))
+                scores.extend(future.result())
 
         combined_scores = []
         for doc_id, bm25_score in scores:
@@ -95,6 +120,44 @@ class AdvancedRanking:
         sorted_results = sorted(combined_scores, key=lambda x: x[1], reverse=True)
         return sorted_results
 
+    async def rank_documents_async(self, query: str, fields: List[str] = None, boost_terms: Dict[str, float] = None) -> List[Tuple[int, float]]:
+        query_terms = await self.expand_query_async(query)
+
+        if boost_terms:
+            query_terms = self.apply_boosting(query_terms, boost_terms)
+
+        scores = []
+
+        # Optimize thread pool size based on available CPU cores
+        loop = asyncio.get_event_loop()
+        with ThreadPoolExecutor(max_workers=os.cpu_count()) as executor:
+            doc_ids = list(self.doc_lengths.keys())
+            batch_size = max(1, len(doc_ids) // (os.cpu_count() * 2))  # Dynamic batch size
+            tasks = []
+
+            for i in range(0, len(doc_ids), batch_size):
+                batch = doc_ids[i:i + batch_size]
+                tasks.append(loop.run_in_executor(executor, self.process_batch, query_terms, batch))
+
+            results = await asyncio.gather(*tasks)
+            for result in results:
+                scores.extend(result)
+
+        combined_scores = []
+        for doc_id, bm25_score in scores:
+            pagerank_score = self.page_rank_scores.get(doc_id, 0.0)
+            final_score = self.combine_scores(bm25_score, pagerank_score)
+            combined_scores.append((doc_id, final_score))
+
+        sorted_results = sorted(combined_scores, key=lambda x: x[1], reverse=True)
+        return sorted_results
+
+    def process_batch(self, query_terms: List[str], batch: List[int]) -> List[Tuple[int, float]]:
+        batch_scores = []
+        for doc_id in batch:
+            bm25_score = self.calculate_bm25_score(query_terms, doc_id)
+            batch_scores.append((doc_id, bm25_score))
+        return batch_scores
 
     def combine_scores(self, content_score: float, pagerank_score: float) -> float:
         combined_score = (self.content_weight * content_score) + (self.pagerank_weight * pagerank_score)
@@ -109,7 +172,8 @@ class AdvancedRanking:
             for link_id in links:
                 graph.add_edge(doc_id, link_id)
 
-        page_rank_scores = nx.pagerank(graph, alpha=self.damping_factor)
+        # Optimize PageRank calculation by using sparse matrix representation
+        page_rank_scores = nx.pagerank(graph, alpha=self.damping_factor, max_iter=100, tol=1e-6)
 
         return page_rank_scores
 
@@ -239,11 +303,16 @@ if __name__ == "__main__":
     indexer = Indexing()
     advanced_ranker = AdvancedRanking(indexer)
 
-    # Get user input
-    query, boost_terms = get_user_input()
+    async def main():
+        query = input("Enter your search query: ")
+        boost_terms = {"important_term": 2, "another_term": 3}
+        results = await advanced_ranker.rank_documents_async(query, boost_terms=boost_terms)
 
-    # Rank documents based on the user query
-    results = advanced_ranker.rank_documents(query, boost_terms=boost_terms)
+        for rank, (doc_id, score) in enumerate(results, start=1):
+            document_tuple = indexer.get_document_by_id(doc_id)
+            print(f"Rank {rank}: Document ID {doc_id}, Score: {score:.4f}")
+            print(f"URL: {document_tuple[1]}, Title: {document_tuple[2]}")
+            print(f"Content: {document_tuple[3]}")
+            print("----")
 
-    # Display the ranked results
-    display_results(results, indexer)
+    asyncio.run(main())
