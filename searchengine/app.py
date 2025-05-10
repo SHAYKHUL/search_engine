@@ -57,7 +57,6 @@ async def search():
         start_time = datetime.now()
 
         query = request.form['query'].strip()
-        query = query.strip().capitalize()  # Capitalize the query to match Wikipedia titles
         page_number = int(request.args.get('page', 1))
 
         if not query:
@@ -391,4 +390,4 @@ def internal_error(error):
 
 # --- Run Server ---
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=4000, debug=True)

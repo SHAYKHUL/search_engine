@@ -3,474 +3,231 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Search Results</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-</head>
-<style>
-	body {
-            font-family: 'Arial', sans-serif;
+    <title>Search Results for "{{ query }}"</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #f9f9f9;
             margin: 0;
-            margin-top: 60px; 
             padding: 20px;
-            background-color: #fff;
-            color: #333;
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
         }
-	header {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 10px;
-        background-color: #fff;
-        border-bottom: 1px solid #dfe1e5;
-        z-index: 1000;
-    }
-	 .header-hidden {
-        display: none;
-    }
-    .logo-container {
-        display: flex;
-        justify-content: flex-start;
-        padding: 10px;
-    }
-
-    .company-logo {
-        max-width: 150px;
-        height: auto;
-    }
-
-    .header-options {
-        display: flex;
-        align-items: center;
-        margin-left: auto; /* Move to the right side */
-    }
-
-    .header-options a {
-        margin-right: 20px;
-        text-decoration: none;
-        color: #333;
-        font-size: 18px;
-        transition: color 0.3s;
-    }
-
-    .header-options a:hover {
-        color: #4285f4;
-    }
-
-    .header-options i {
-        margin-right: 5px; /* Adjust as needed for spacing between icon and text */
-    }
-
-        .result {
-            flex: 1;
-            max-width: calc(65% - 20px);
-            margin-bottom: 20px;
-            background-color: #fff;
-            border: 1px solid #dfe1e5;
-            border-radius: 8px;
-            overflow: hidden;
-            transition: box-shadow 0.3s ease-in-out;
+        .container {
+            max-width: 1300px;
+            margin: auto;
         }
-
-        .result:hover {
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        .search-bar {
+            margin-bottom: 25px;
+            position: relative;
         }
-        
-        .results-info{
-            margin: 20px;
+        .suggestions-box {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            background: white;
+            border: 1px solid #ccc;
+            z-index: 1000;
+            max-height: 200px;
+            overflow-y: auto;
+            border-radius: 4px;
         }
-
-        h1 {
-            font-size: 24px;
-            margin: 20px;
-            color: #4285f4;
-         
+        .suggestion-item {
+            padding: 10px;
+            cursor: pointer;
         }
-
-        ul {
-            list-style-type: none;
-            padding: 0;
-            margin: 20px;
+        .suggestion-item:hover {
+            background-color: #f0f0f0;
         }
-
-        li {
-            border-bottom: 1px solid #ddd;
-            padding: 20px;
-            
+        .result-item {
+            padding: 15px 0;
+            border-bottom: 1px solid #eaeaea;
         }
-
-        strong {
-            font-weight: bold;
-            color: #333;
-            display: block;
-            font-size: 18px;
+        .result-item h3 {
+            font-size: 1.2rem;
             margin-bottom: 8px;
         }
-
-        a {
-            text-decoration: none;
-            color: #1a0dab;
-            font-weight: bold;
-            display: block;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        p {
-            margin: 10px 0;
+        .result-item p {
+            font-size: 0.95rem;
             color: #555;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            display: -webkit-box;
-            -webkit-box-orient: vertical;
-            -webkit-line-clamp: 3;
         }
-
-        p.score {
-            font-weight: bold;
-            color: #0f9d58;
-            margin-bottom: 5px;
-        }
-
-        .additional-info {
-            flex: 1;
-            max-width: calc(30% - 20px);
-            margin-left: 20px;
-            padding: 20px;
-            background-color: #fff;
-            border: 1px solid #dfe1e5;
-            border-radius: 8px;
-            height: fit-content;
-        }
-
-        .additional-info h2 {
-            font-size: 24px;
-            color: #4285f4;
-            margin-bottom: 10px;
-        }
-
-        .additional-info p {
-            color: #555;
-            margin-bottom: 15px;
-        }
-
-        .additional-info a {
-            color: #1a0dab;
-            font-weight: bold;
-            text-decoration: none;
-        }
-
-        .additional-info ul {
-            list-style-type: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .additional-info li {
-            margin-bottom: 5px;
-        }
-
-        .additional-info strong {
-            font-weight: bold;
-            color: #333;
-            margin-right: 5px;
-        }
-
-        #search-bar {
-            flex: 1;
-            max-width: calc(65% - 20px);
-            margin: 20px;
-        }
-
-        #search-form {
-            display: flex;
-            align-items: center;
-        }
-
-        #query {
-            flex: 1;
-            padding: 10px;
-            font-size: 16px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            outline: none;
-        }
-
-        #search-btn {
-        padding: 10px 20px;
-        font-size: 16px;
-        background-color: #4285f4;
-        color: white;
-        border: none;
-        cursor: pointer;
-        border-radius: 4px;
-        margin-left: 10px;
-    }
-        
-
-        #load-more-btn {
-            padding: 10px 20px;
-            font-size: 16px;
-            background-color: #4285f4;
-            color: white;
-            border: none;
-            cursor: pointer;
-            margin-top: 20px;
-            border-radius: 4px;
-        }
-
-        #load-more-btn:hover {
-            background-color: #357ae8;
-        }
-
-        /* Footer styles */
-        footer {
-            width: 100%;
+        .pagination {
+            margin-top: 30px;
             text-align: center;
-            padding: 10px;
-            background-color: #fff;
-            border-top: 1px solid #dfe1e5;
-            margin-top: 20px;
         }
-
-        @media screen and (max-width: 768px) {
-            .result {
-                flex: 1 100%;
-                max-width: calc(100%);
-                margin-right: 0;
-            }
-
-            .additional-info {
-                flex: 1 100%;
-                max-width: calc(100% - 20px);
-                margin-left: 0;
-                margin-top: 20px;
-            }
-
-            #search-bar {
-                flex: 1 100%;
-                max-width: calc(100% - 60px);
-                margin: 20px 10px;
-            }
-
-            #search-btn {
-                width: 80px;
-            }
-
-            body {
-                padding: 10px;
-            }
-
-            .result:hover {
-                box-shadow: none;
-            }
+        .pagination a {
+            text-decoration: none;
+            color: #007bff;
+            padding: 8px 14px;
+            margin: 0 5px;
+            border-radius: 4px;
         }
-
-        p.results-info {
-            font-size: 16px;
-            color: #555;
-            margin-bottom: 10px;
+        .pagination a:hover {
+            background-color: #007bff;
+            color: white;
         }
-
-        /* Additional styles for displaying time taken */
-        p.results-info span {
+        .pagination .current-page {
             font-weight: bold;
-            color: #4285f4;
+            color: #007bff;
         }
-         #catagory-options {
-        margin-bottom: 20px;
-    }
-
-    #catagory-options {
-        float: right; /* Align to the right side */
-        margin-top: -50px; /* Adjust as needed for spacing */
-        margin-right: 10px;
-    }
-
-    .catagory-btn {
-        padding: 8px 16px;
-        font-size: 14px;
-        cursor: pointer;
-        background-color: #f0f0f0;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        transition: background-color 0.3s;
-    }
-
-    .catagory-btn.active {
-        background-color: #4285f4;
-        color: #fff;
-        border-color: #4285f4;
-    }
-
-    .catagory-btn:not(:last-child) {
-        margin-right: 10px;
-    }
-
-    .catagory-btn:hover {
-        background-color: #ddd;
-
-</style>
+        .no-results {
+            text-align: center;
+            font-size: 1.1rem;
+            color: #888;
+        }
+        .time-taken {
+            font-size: 0.9rem;
+            color: #888;
+            margin-bottom: 20px;
+        }
+        mark {
+            background-color: #fff3a3;
+        }
+        .sidebar h5 {
+            margin-top: 20px;
+            font-weight: 600;
+        }
+        .sidebar p {
+            font-size: 0.9rem;
+            color: #555;
+        }
+        .sidebar a {
+            font-size: 0.9rem;
+            color: #007bff;
+            text-decoration: none;
+        }
+        .sidebar a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
 <body>
-     <div>
-     <header>
-        <div class="logo-container">
-            <img src="algolizen.png" alt="Company Logo" class="company-logo">
-        </div>
-        <div class="header-options">
-        <a href="/settings" title="Settings"><i class="fas fa-cog"></i></a>
-        <a href="/user-account" title="User Account"><i class="fas fa-user"></i></a>
-        <a href="/tools" title="Tools"><i class="fas fa-wrench"></i></a>
-    </header>
-    </div>
-    
-    <!-- Search results -->
-    <div class="result">
-        <h1 class="search-results-title">Search Results for "{{ query }}"</h1>
-        <div id="catagory-options">
-        <button class="catagory-btn active" data-catagory="all">All</button>
-        <button class="catagory-btn" data-catagory="image">Image</button>
-        <button class="catagory-btn" data-catagory="news">News</button>
-        <!-- Add more catagory options as needed -->
-    </div>
-        <p class="results-info">{{ num_results }} results found in <span>{{ time_taken.total_seconds() }}</span> seconds</p>
-        
-        <div id="search-bar">
-            <form id="search-form" action="/search" method="post">
-                <input type="text" name="query" id="query" placeholder="Search again" required>
-                <button type="submit" id="search-btn">Search</button>
+    <div class="container">
+        <!-- Search Bar -->
+        <div class="search-bar">
+            <form action="/search" method="POST" class="form-inline">
+                <input type="text" id="search-input" name="query" class="form-control mr-sm-2 w-75" placeholder="Search..." value="{{ query }}" required autocomplete="off">
+                <button type="submit" class="btn btn-primary">Search</button>
             </form>
+            <div id="suggestions-box" class="suggestions-box"></div>
         </div>
-        
-        <ul>
-            {% for document in ranked_documents %}
-                <li>
-                    <strong>{{ document.rank }}. {{ document.title }}</strong> 
-                    <a href="{{ document.url }}" target="_blank">{{ document.url }}</a>
-                    <p class="score">Score: {{ document.score }}</p>
-                    <p>{{ document.content }}</p>
-                </li>
-            {% endfor %}
-        </ul>
 
-        <!-- "Load More" button -->
-        <button id="load-more-btn" data-page="{{ page_number + 1 }}" data-query="{{ query }}">Load More</button>
-    </div>
+        <h4>Search Results for: <strong>{{ query }}</strong></h4>
+        <p class="time-taken">Search took: {{ time_taken }}</p>
 
-    <!-- Additional information -->
-    <div class="additional-info">
-        <h2>{{ topic_info.title }}</h2>
-        <p>{{ topic_info.summary }}</p>
-        <a href="{{ topic_info.fullurl }}" target="_blank">Read more on Wikipedia</a>
-        {% if topic_info.pageprops %}
-            <ul>
-                {% for prop_key, prop_value in topic_info.pageprops.items() %}
-                    <li><strong>{{ prop_key }}:</strong> {{ prop_value }}</li>
+        <div class="row">
+            <!-- Main Content (Search Results) -->
+            <div class="col-md-8">
+                {% if direct_answer %}
+                <div class="mb-4">
+                    <h5>Direct Answer:</h5>
+                    <p>{{ direct_answer }}</p>
+                </div>
+                {% endif %}
+
+                {% if ranked_documents %}
+                {% for doc in ranked_documents %}
+                <div class="result-item">
+                    <h3><a href="{{ doc.url }}" target="_blank">{{ doc.title }}</a></h3>
+                    <p><strong>Score:</strong> {{ doc.score }}</p>
+                    <p>{{ doc.content|safe }}</p>
+                </div>
                 {% endfor %}
-            </ul>
-        {% endif %}
+
+                <!-- Pagination -->
+                <div class="pagination">
+                    {% if page_number > 1 %}
+                    <a href="/search?query={{ query }}&page={{ page_number - 1 }}">« Previous</a>
+                    {% endif %}
+                    <span class="current-page">{{ page_number }}</span>
+                    <a href="/search?query={{ query }}&page={{ page_number + 1 }}">Next »</a>
+                </div>
+                {% else %}
+                <div class="no-results">
+                    <p>No results found for your query. Try different keywords.</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Sidebar (Related Searches + Topic Info) -->
+            <div class="col-md-4">
+                <div class="sidebar">
+                    <h5>Related Searches</h5>
+                    <ul id="related-list">
+                        <li>Loading related queries...</li>
+                    </ul>
+
+                    {% if topic_info %}
+                    <div id="topic-info">
+                        <h5>Topic Info</h5>
+                        <p><strong>{{ topic_info.title }}</strong></p>
+                        <p>{{ topic_info.summary }}</p>
+                        <p><a href="{{ topic_info.fullurl }}" target="_blank">Read more on Wikipedia</a></p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
     </div>
-
-    <!-- Footer -->
-    <footer>
-        &copy; 2024 Algolizen. All rights reserved.
-    </footer>
-
-<!-- JavaScript for loading more results -->
-<script>
-    const loadMoreBtn = document.getElementById('load-more-btn');
-    const resultsContainer = document.querySelector('ul');
-
-    loadMoreBtn.addEventListener('click', function () {
-        const nextPage = this.getAttribute('data-page');
-        const query = this.getAttribute('data-query');
-        loadMoreResults(query, nextPage);
-    });
-
-    async function loadMoreResults(query, page) {
-        try {
-            loadMoreBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...'; // Show loading spinner
-
-            const response = await fetch(`/load_more?query=${encodeURIComponent(query)}&page=${page}`);
-            if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
-            }
-
-            const data = await response.json();
-
-            data.results.forEach(function (result) {
-                const li = document.createElement('li');
-                li.innerHTML = '<strong>' + result.rank + '. ' + result.title + '</strong>' +
-                    '<a href="' + result.url + '" target="_blank">' + result.url + '</a>' +
-                    '<p class="score">Score: ' + result.score + '</p>' +
-                    '<p>' + result.content + '</p>';
-                resultsContainer.appendChild(li);
-            });
-
-            if (data.results.length === 0) {
-                loadMoreBtn.style.display = 'none'; // Hide the button if there are no more results
-            } else {
-                loadMoreBtn.setAttribute('data-page', data.next_page);
-                loadMoreBtn.innerHTML = 'Load More'; // Restore button text
-            }
-        } catch (error) {
-            console.error('Error fetching more results:', error);
-            loadMoreBtn.innerHTML = 'Load More'; // Restore button text on error
-        }
-    }
-</script>
-
 
     <script>
-	    document.addEventListener("DOMContentLoaded", function () {
-		truncateTitle();
-	    });
+        const searchInput = document.getElementById('search-input');
+        const suggestionsBox = document.getElementById('suggestions-box');
+        let debounceTimeout;
 
-	    function truncateTitle() {
-		var titleElement = document.querySelector('.search-results-title');
-		if (titleElement) {
-		    var originalText = titleElement.textContent.trim();
-		    var maxWords = 5; // Adjust this value as needed
+        searchInput.addEventListener('input', () => {
+            clearTimeout(debounceTimeout);
+            debounceTimeout = setTimeout(fetchSuggestions, 300);
+        });
 
-		    // Split the original text into an array of words
-		    var words = originalText.split(' ');
-
-		    // Truncate the array to the desired number of words
-		    var truncatedWords = words.slice(0, maxWords);
-
-		    // Join the truncated words back into a string
-		    var truncatedText = truncatedWords.join(' ');
-
-		    // Update the title with the truncated text
-		    titleElement.textContent = truncatedText + '...';
-		}
-	    }
-</script>
-<script>
-        var lastScrollTop = 0;
-        var header = document.querySelector('header');
-
-        window.addEventListener('scroll', function () {
-            var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-
-            if (scrollTop > lastScrollTop) {
-                // Scrolling down, hide the header
-                header.classList.add('header-hidden');
-            } else {
-                // Scrolling up, show the header
-                header.classList.remove('header-hidden');
+        async function fetchSuggestions() {
+            const query = searchInput.value.trim();
+            if (!query) {
+                suggestionsBox.innerHTML = '';
+                return;
             }
 
-            lastScrollTop = scrollTop;
+            try {
+                const response = await fetch(`/suggest?query=${encodeURIComponent(query)}`);
+                const data = await response.json();
+                suggestionsBox.innerHTML = data.suggestions?.length
+                    ? data.suggestions.map(s => `<div class="suggestion-item">${s}</div>`).join('')
+                    : '<div class="suggestion-item">No suggestions found</div>';
+            } catch (error) {
+                console.error('Error fetching suggestions:', error);
+            }
+        }
+
+        suggestionsBox.addEventListener('click', (event) => {
+            if (event.target.classList.contains('suggestion-item')) {
+                searchInput.value = event.target.textContent;
+                suggestionsBox.innerHTML = '';
+            }
+        });
+
+        const relatedList = document.getElementById('related-list');
+
+        async function fetchRelatedSearches(query) {
+            try {
+                const response = await fetch(`/related?query=${encodeURIComponent(query)}`);
+                const data = await response.json();
+                relatedList.innerHTML = (data && data.length)
+                    ? data.map(q => `<li><a href="/search?query=${encodeURIComponent(q)}">${q}</a></li>`).join('')
+                    : '<li>No related searches found</li>';
+            } catch (error) {
+                console.error('Error loading related searches:', error);
+                relatedList.innerHTML = '<li>Error loading related searches</li>';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const query = "{{ query }}";
+            if (query) fetchRelatedSearches(query);
         });
     </script>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>
